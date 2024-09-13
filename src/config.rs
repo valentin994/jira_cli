@@ -10,6 +10,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub jira_api_key: String,
+    pub domain: String,
+    pub active_board: Option<u16>,
 }
 
 impl Config {
@@ -24,6 +26,20 @@ impl Config {
         let path = config_file_path();
         let file = std::fs::File::options().read(true).open(path);
         file
+    }
+
+    pub fn update_field(&mut self, board_id: u16) -> &mut Self {
+        let path = config_file_path();
+        let file = std::fs::File::options()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(&path)
+            .unwrap();
+        self.active_board = Some(board_id);
+        serde_json::to_writer(file, &self).unwrap();
+        self
     }
 }
 
@@ -44,6 +60,11 @@ pub fn create_config(path: std::path::PathBuf) {
         .read_line(&mut input)
         .expect("Failed to read API KEY");
     input.pop();
+    println!("Domain:");
+    let mut input_domain = String::new();
+    io::stdin()
+        .read_line(&mut input_domain)
+        .expect("Failed to parse domain");
     let _ = fs::create_dir_all(ProjectDirs::from("", "", "jira_cli").unwrap().config_dir());
     let file = std::fs::File::options()
         .read(true)
@@ -54,6 +75,8 @@ pub fn create_config(path: std::path::PathBuf) {
         .unwrap();
     let config = Config {
         jira_api_key: input,
+        domain: input_domain,
+        active_board: None,
     };
     serde_json::to_writer(file, &config).unwrap();
 }

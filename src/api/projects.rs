@@ -2,11 +2,12 @@ use crate::models::project::Projects;
 
 pub async fn get_projects(
     client: reqwest::Client,
+    domain: String,
     api_key: String,
     page_number: u8,
 ) -> Result<Projects, Box<dyn std::error::Error>> {
     let url = format!(
-        "https://irobot.atlassian.net/rest/api/3/project/search?maxResults=50&startAt={}",
+        "https://{domain}/rest/api/3/project/search?maxResults=50&startAt={}",
         page_number * 50
     );
     let body = client
