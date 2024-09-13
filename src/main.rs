@@ -27,13 +27,28 @@ async fn main() {
     let client = reqwest::Client::new();
     match &cli.commands {
         Commands::List(params) => {
-            match get_projects(client, config_data.domain, config_data.jira_api_key, params.page).await {
+            match get_projects(
+                client,
+                config_data.domain,
+                config_data.auth_user.user,
+                config_data.auth_user.jira_api_key,
+                params.page,
+            )
+            .await
+            {
                 Ok(res) => println!("{}", serde_json::to_string_pretty(&res).unwrap()),
                 Err(err) => println!("{err}"),
             }
         }
         Commands::SprintEnum(_params) => {
-            match get_current_sprint(client, config_data.jira_api_key).await {
+            match get_current_sprint(
+                client,
+                config_data.domain,
+                config_data.auth_user.user,
+                config_data.auth_user.jira_api_key,
+            )
+            .await
+            {
                 Ok(res) => println!("{}", serde_json::to_string_pretty(&res).unwrap()),
                 Err(err) => println!("{err}"),
             }
@@ -41,7 +56,14 @@ async fn main() {
         Commands::Issue(params) => {
             let issue_command = params.command.clone().unwrap_or(IssueCommands::List);
             match issue_command {
-                IssueCommands::List => match get_issues(client, config_data.domain, config_data.jira_api_key).await {
+                IssueCommands::List => match get_issues(
+                    client,
+                    config_data.domain,
+                    config_data.auth_user.user,
+                    config_data.auth_user.jira_api_key,
+                )
+                .await
+                {
                     Ok(res) => println!("{}", res),
                     Err(err) => println!("{err}"),
                 },
@@ -52,13 +74,29 @@ async fn main() {
         }
         Commands::Boards(params) => match &params.command {
             BoardCommands::List(params) => {
-                match get_boards(client, config_data.domain, config_data.jira_api_key, params.page).await {
+                match get_boards(
+                    client,
+                    config_data.domain,
+                    config_data.auth_user.user,
+                    config_data.auth_user.jira_api_key,
+                    params.page,
+                )
+                .await
+                {
                     Ok(res) => println!("{}  \nPage: {} / {}", res, params.page, res.total / 50),
                     Err(err) => println!("{err}"),
                 }
             }
             BoardCommands::Select(params) => {
-                match get_board(client, &config_data.domain, &config_data.jira_api_key, params.id).await {
+                match get_board(
+                    client,
+                    &config_data.domain,
+                    &config_data.auth_user.user,
+                    &config_data.auth_user.jira_api_key,
+                    params.id,
+                )
+                .await
+                {
                     Ok(res) => {
                         println!("{res}");
                         config_data.update_field(params.id);

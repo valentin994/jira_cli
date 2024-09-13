@@ -9,9 +9,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub jira_api_key: String,
+    pub auth_user: AuthUser,
     pub domain: String,
     pub active_board: Option<u16>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AuthUser {
+    pub user: String,
+    pub jira_api_key: String,
 }
 
 impl Config {
@@ -54,6 +60,12 @@ pub fn config_file_path() -> std::path::PathBuf {
 }
 
 pub fn create_config(path: std::path::PathBuf) {
+    println!("Jira user:");
+    let mut input_user = String::new();
+    io::stdin()
+        .read_line(&mut input_user)
+        .expect("Failed to parse user");
+    input_user.pop();
     println!("API KEY:");
     let mut input = String::new();
     io::stdin()
@@ -65,6 +77,11 @@ pub fn create_config(path: std::path::PathBuf) {
     io::stdin()
         .read_line(&mut input_domain)
         .expect("Failed to parse domain");
+    input_domain.pop();
+    let auth_user = AuthUser {
+        user: input_user,
+        jira_api_key: input,
+    };
     let _ = fs::create_dir_all(ProjectDirs::from("", "", "jira_cli").unwrap().config_dir());
     let file = std::fs::File::options()
         .read(true)
@@ -74,7 +91,7 @@ pub fn create_config(path: std::path::PathBuf) {
         .open(&path)
         .unwrap();
     let config = Config {
-        jira_api_key: input,
+        auth_user,
         domain: input_domain,
         active_board: None,
     };

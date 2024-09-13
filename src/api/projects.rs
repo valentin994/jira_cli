@@ -3,6 +3,7 @@ use crate::models::project::Projects;
 pub async fn get_projects(
     client: reqwest::Client,
     domain: String,
+    user: String,
     api_key: String,
     page_number: u8,
 ) -> Result<Projects, Box<dyn std::error::Error>> {
@@ -12,7 +13,7 @@ pub async fn get_projects(
     );
     let body = client
         .get(url)
-        .basic_auth("vvareskic@irobot.com", Some(api_key))
+        .basic_auth(user, Some(api_key))
         .send()
         .await?
         .text()

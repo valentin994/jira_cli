@@ -1,5 +1,5 @@
-use clap::{Args, Parser, Subcommand};
 use crate::config::Config;
+use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
