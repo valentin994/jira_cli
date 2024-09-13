@@ -23,7 +23,7 @@ pub async fn get_boards(
 pub async fn get_board(
     client: reqwest::Client,
     domain: &String,
-    user: String,
+    user: &String,
     api_key: &String,
     id: u16,
 ) -> Result<Board, Box<dyn std::error::Error>> {
