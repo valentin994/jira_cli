@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+use prettytable::Table;
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Boards {
@@ -13,10 +15,13 @@ pub struct Boards {
 
 impl fmt::Display for Boards {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Total boards: {}", self.total)?;
+        let mut table = Table::new();
+        table.add_row(row![FG -> "ID", FG -> "NAME"]);
+        write!(f, "\nTotal boards: {}\n", self.total)?;
         for board in &self.values {
-            write!(f, "\n{board}")?;
+            table.add_row(row![board.id, board.name]);
         }
+        table.printstd();
         Ok(())
     }
 }

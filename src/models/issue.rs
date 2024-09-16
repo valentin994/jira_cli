@@ -3,6 +3,8 @@ use crossterm::style::Stylize;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+use prettytable::Table;
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Issues {
@@ -15,10 +17,21 @@ pub struct Issues {
 
 impl fmt::Display for Issues {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Total issues this sprint: {}", self.total)?;
+        let mut table = Table::new();
+        table.add_row(row!["ID", "Summary", "Status", "Assignee", "Creator", "Priority"]);
+        write!(f, "\nTotal issues: {}\n", self.total)?;
         for issue in &self.issues {
-            write!(f, "\n{issue}\n")?;
+            table.add_row(row![
+                issue.key,
+                issue.fields.summary,
+                issue.fields.status,
+                issue.fields.assignee.display_name,
+                issue.fields.creator.display_name,
+                issue.fields.priority.name
+            ]);
+            // write!(f, "\n{issue}\n")?;
         }
+        table.printstd();
         Ok(())
     }
 }
@@ -29,17 +42,11 @@ pub struct Issue {
     fields: Fields,
 }
 
-impl fmt::Display for Issue {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "\n{} {}", self.key.clone().bold().green(), self.fields)
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Fields {
     parent: Option<Parent>,
-    priority: Option<Priority>,
-    assignee: Option<Assignee>,
+    priority: Priority,
+    assignee: Assignee,
     status: Status,
     creator: Creator,
     reporter: Reporter,
@@ -49,32 +56,6 @@ pub struct Fields {
     summary: String, //    sprint: Sprint
 }
 
-impl fmt::Display for Fields {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let priority = match &self.priority {
-            Some(value) => value.clone(),
-            None => Priority {
-                name: "No priority set".to_string(),
-            },
-        };
-        let description = match &self.description {
-            Some(value) => value.clone(),
-            None => "No description".to_string(),
-        };
-        let datetime = DateTime::parse_from_str(&self.created, "%Y-%m-%dT%H:%M:%S%.3f%z")
-            .expect("Failed to parse date");
-        write!(
-            f,
-            "{} \n\nDescription:\n------------ \n{}\n \n|- Priority: {} \n|- Status: {} \n|- Created: {}",
-            self.summary.clone().bold().red(),
-            description,
-            priority,
-            self.status,
-            datetime.format("%d-%m-%Y")
-        )?;
-        Ok(())
-    }
-}
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -120,7 +101,7 @@ impl fmt::Display for Status {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Assignee {
-    display_name: String,
+    pub display_name: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

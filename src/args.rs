@@ -1,5 +1,4 @@
-use crate::config::Config;
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -26,13 +25,34 @@ pub enum Commands {
 #[command(args_conflicts_with_subcommands = true)]
 pub struct IssueArgs {
     #[command(subcommand)]
-    pub command: Option<IssueCommands>,
+    pub command: IssueCommands,
 }
 
-#[derive(Debug, Clone, Subcommand)]
+#[derive(Debug, Subcommand)]
 pub enum IssueCommands {
-    List,
+    List(IssueListArgs),
     Create,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct IssueListArgs {
+    #[arg(short, long)]
+    pub status: Option<String>,
+    #[arg(short, long)]
+    pub assignee: Option<String>,
+    #[arg(short, long)]
+    pub creator: Option<String>,
+    #[arg(short, long)]
+    pub priority: Option<PriorityArg>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+pub enum PriorityArg {
+    NeedsPriority,
+    Low,
+    Medium,
+    High,
+    Critical
 }
 
 #[derive(Debug, Args)]

@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate prettytable;
+
 use clap::Parser;
 
 mod api;
@@ -13,8 +16,6 @@ use crate::api::sprint::get_current_sprint;
 use crate::args::{BoardCommands, Cli, Commands, IssueCommands};
 use crate::config::{config_file_path, create_config, Config};
 
-// TODO error handling
-// TODO different displays for issues list
 
 #[tokio::main]
 async fn main() {
@@ -54,13 +55,13 @@ async fn main() {
             }
         }
         Commands::Issue(params) => {
-            let issue_command = params.command.clone().unwrap_or(IssueCommands::List);
-            match issue_command {
-                IssueCommands::List => match get_issues(
+            match &params.command {
+                IssueCommands::List(params) => match get_issues(
                     client,
                     config_data.domain,
                     config_data.auth_user.user,
                     config_data.auth_user.jira_api_key,
+                    params
                 )
                 .await
                 {
