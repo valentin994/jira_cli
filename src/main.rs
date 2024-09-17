@@ -9,13 +9,14 @@ mod config;
 mod models;
 
 use crate::api::board::{get_board, get_boards};
-use crate::api::issue::get_issues;
-use crate::api::projects::get_projects;
-use crate::api::sprint::get_current_sprint;
+use crate::api::issue::{get_issue, get_issues};
 
-use crate::args::{BoardCommands, Cli, Commands, IssueCommands};
+use crate::args::board::BoardCommands;
+use crate::args::cli::{Cli, Commands};
+use crate::args::issue::IssueCommands;
 use crate::config::{config_file_path, create_config, Config};
 
+//TODO change to use tabled instead of prettytable
 
 #[tokio::main]
 async fn main() {
@@ -27,52 +28,35 @@ async fn main() {
     let mut config_data = Config::new();
     let client = reqwest::Client::new();
     match &cli.commands {
-        Commands::List(params) => {
-            match get_projects(
+        Commands::Issue(params) => match &params.command {
+            IssueCommands::List(params) => match get_issues(
                 client,
                 config_data.domain,
                 config_data.auth_user.user,
                 config_data.auth_user.jira_api_key,
-                params.page,
+                params,
             )
             .await
             {
-                Ok(res) => println!("{}", serde_json::to_string_pretty(&res).unwrap()),
+                Ok(res) => println!("{}", res),
                 Err(err) => println!("{err}"),
-            }
-        }
-        Commands::SprintEnum(_params) => {
-            match get_current_sprint(
+            },
+            IssueCommands::Select(params) => match get_issue(
                 client,
                 config_data.domain,
                 config_data.auth_user.user,
                 config_data.auth_user.jira_api_key,
+                &params.ticket,
             )
             .await
             {
-                Ok(res) => println!("{}", serde_json::to_string_pretty(&res).unwrap()),
+                Ok(res) => println!("{res}"),
                 Err(err) => println!("{err}"),
+            },
+            IssueCommands::Create => {
+                println!("Create")
             }
-        }
-        Commands::Issue(params) => {
-            match &params.command {
-                IssueCommands::List(params) => match get_issues(
-                    client,
-                    config_data.domain,
-                    config_data.auth_user.user,
-                    config_data.auth_user.jira_api_key,
-                    params
-                )
-                .await
-                {
-                    Ok(res) => println!("{}", res),
-                    Err(err) => println!("{err}"),
-                },
-                IssueCommands::Create => {
-                    println!("Create")
-                }
-            }
-        }
+        },
         Commands::Boards(params) => match &params.command {
             BoardCommands::List(params) => {
                 match get_boards(
