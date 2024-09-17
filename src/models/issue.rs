@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-use prettytable::{Cell, Row, Table};
+use prettytable::Table;
+use tabled;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -48,11 +49,14 @@ pub struct Issue {
 }
 
 impl fmt::Display for Issue {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut table = Table::new();
-        table.add_row(row![format!("{} - {}", &self.key, &self.fields.summary)]);
-        table.add_row(row![&self.fields.description]);
-        table.printstd();
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut builder = tabled::builder::Builder::new();
+        builder.push_record([format!("{} - {}", &self.key, &self.fields.summary)]);
+        builder.push_record([&self.fields.description]);
+        let table = builder.build()
+            .with(tabled::settings::Width::wrap(128))
+            .to_string();
+        write!(f, "{}", table)?;
         Ok(())
     }
 }
